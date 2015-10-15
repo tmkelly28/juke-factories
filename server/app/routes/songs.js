@@ -21,12 +21,14 @@ router.param('songId', function(req, res, next, id) {
     .then(function(song) {
       if(!song) throw new Error('not found!')
       req.song = song
+      console.log(req.song)
       next()
     })
     .then(null, next)
 })
 
 router.get('/:songId.audio', function(req, res, next) {
+  console.log('in audio route')
   if(!req.song.extension) return next(new Error('No audio for song'))
   res.set('Content-Type', mime.lookup(req.song.extension))
   res.sendFile(path.join(process.cwd(), 'server/audio', req.song.id))

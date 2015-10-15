@@ -1,47 +1,32 @@
-// var fakeAlbum = {
-// 	name: 'Abbey Road',
-// 	artists: [{name: 'Bill'}, {name: 'Bob'}],
-// 	songs: [{
-// 		name: 'Romeo & Juliette',
-// 		artists: [{name: 'Bill'}],
-// 		genres: ['Smooth', 'Funk'],
-// 		audioUrl: 'http://www.stephaniequinn.com/Music/Commercial%20DEMO%20-%2013.mp3'
-// 	}, {
-// 		name: 'White Rabbit',
-// 		artists: [{name: 'Bill'}, {name: 'Bob'}],
-// 		genres: ['Fantasy', 'Sci-fi'],
-// 		audioUrl: 'http://www.stephaniequinn.com/Music/Commercial%20DEMO%20-%2008.mp3'
-// 	}, {
-// 		name: 'Lucy in the Sky with Diamonds',
-// 		artists: [{name: 'Bob'}],
-// 		genres: ['Space'],
-// 		audioUrl: 'http://www.stephaniequinn.com/Music/Commercial%20DEMO%20-%2001.mp3'
-// 	}],
-// 	imageUrl: 'http://fillmurray.com/300/300'
-// };
+app.controller('AlbumCtrl', function ($scope, $http, $rootScope, StatsFactory, PlayerFactory, AlbumFactory) {
 
-app.controller('AlbumCtrl', function ($scope, $http, $rootScope) {
-	// $scope.album = fakeAlbum;
-	$http.get('/api/albums/561e86b67cc60c7cebd21a57')
-	.then(function (response) {
-		var album = response.data;
-		album.imageUrl = '/api/albums/' + album._id + '.image';
-		var albumArtists = _.indexBy(album.artists, '_id');
-		album.songs.forEach(function (s) {
-			s.audioUrl = '/api/songs/' + s._id + '.audio';
-			s.artists = s.artists.map(function (artistId) {
-				return albumArtists[artistId];
+
+	$scope.showSingleAlbum = false;
+	
+	$scope.$on('viewChange', function(evt, data) {
+		if (data.mode ==='singleAlbum') {
+			AlbumFactory.getAlbum(data.id)
+			.then(function(album) {
+				$scope.album = album;
+				$scope.showSingleAlbum = true;
+				return album
+			})
+			.then(function(album) {
+				return StatsFactory.totalTime(album);
+			})
+			.then(function(time) {
+				$scope.albumTime = StatsFactory.parseTime(time);
 			});
-		});
-		$scope.album = album;
+		} else {
+			$scope.showSingleAlbum = false;
+		}
 	});
-	$scope.start = function (s) {
-		$rootScope.$broadcast('startIt', {
-			song: s,
-			album: $scope.album
-		});
-	};
-	$scope.$on('songLoad', function (evt, song) {
-		$scope.currentSong = song;
-	});
+		
+
+	$scope.start = function(song, album) {
+		PlayerFactory.start.call(PlayerFactory, song, album);	
+	}
+
+	$scope.currentSong = PlayerFactory.getCurrentSong;
+	
 });
